@@ -8,8 +8,8 @@ dist
 .env
 .env*.local
 
-# sqlite
-data/
+# sqlite (tylko folder bazy w katalogu głównym, nie server/data/)
+/data/
 *.db
 *.db-journal
 
