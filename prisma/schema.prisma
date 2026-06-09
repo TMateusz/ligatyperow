@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum MatchStatus {
+  PENDING
+  LIVE
+  FINISHED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  username     String       @unique
+  password     String
+  totalPoints  Int          @default(0)
+  role         UserRole     @default(USER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  predictions  Prediction[]
+}
+
+model Match {
+  id            String      @id @default(cuid())
+  fixtureNumber Int?        @unique
+  apiFootballId Int?        @unique
+  homeTeam      String
+  awayTeam      String
+  kickoffTime   DateTime
+  homeScore     Int?
+  awayScore     Int?
+  status        MatchStatus @default(PENDING)
+  stage         String?
+  venue         String?
+  lastSyncedAt  DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  predictions   Prediction[]
+
+  @@index([kickoffTime])
+  @@index([status])
+}
+
+model Prediction {
+  id                 String   @id @default(cuid())
+  userId             String
+  matchId            String
+  predictedHomeScore Int
+  predictedAwayScore Int
+  pointsEarned       Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId])
+  @@index([matchId])
+}

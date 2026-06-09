@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  --pitch-green: #0d4f2b;
+  --pitch-dark: #082e19;
+  --gold: #f5c518;
+  --cream: #f4f1ea;
+}
+
+body {
+  background: linear-gradient(160deg, var(--pitch-dark) 0%, #0a3d22 40%, #061f12 100%);
+  color: var(--cream);
+  min-height: 100vh;
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+@layer utilities {
+  .card-pitch {
+    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-xl;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--gold)] px-4 py-2.5 font-semibold text-[var(--pitch-dark)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 font-medium transition hover:bg-white/10;
+  }
+
+  .input-score {
+    @apply w-14 rounded-lg border border-white/20 bg-white/10 px-2 py-2 text-center text-lg font-bold outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)];
+  }
+}

@@ -1,0 +1,35 @@
+services:
+  app:
+    build: .
+    container_name: ligatyperow
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "file:/app/data/ligatyperow.db"
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+    volumes:
+      - sqlite_data:/app/data
+
+  # Jednorazowy seed użytkowników i meczów:
+  # docker compose run --rm seed
+  seed:
+    build:
+      context: .
+      target: builder
+    profiles:
+      - seed
+    environment:
+      DATABASE_URL: "file:/app/data/ligatyperow.db"
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+      SEED_PASSWORD: ${SEED_PASSWORD:-worldcup2026}
+    volumes:
+      - sqlite_data:/app/data
+    entrypoint: ["sh", "-c", "npx prisma db push && npx prisma db seed"]
+    restart: "no"
+
+volumes:
+  sqlite_data:
