@@ -1,7 +1,7 @@
-import { PrismaClient, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
+import { fileURLToPath } from "url";
+import { prisma } from "../server/lib/prisma.js";
 
 const ADMIN = {
   name: "Admin",
@@ -21,19 +21,17 @@ const PLAYERS = [
   { name: "Piotr Kulpa", username: "piotr" },
 ];
 
-const PLAYER_PASSWORD = process.env.SEED_PASSWORD ?? "atos";
-
-async function main() {
-  const adminPassword = process.env.ADMIN_PASSWORD ?? "change-me";
+export async function seedUsers() {
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "atosms2026";
+  const playerPassword = process.env.SEED_PASSWORD ?? "atos";
   const hashedAdmin = await bcrypt.hash(adminPassword, 12);
-  const hashedPlayer = await bcrypt.hash(PLAYER_PASSWORD, 12);
+  const hashedPlayer = await bcrypt.hash(playerPassword, 12);
 
   const keepUsernames = new Set([
     ADMIN.username,
     ...PLAYERS.map((p) => p.username),
   ]);
 
-  // Usuń stare konta testowe (jan, marek itd.)
   const toRemove = await prisma.user.findMany({
     where: { username: { notIn: [...keepUsernames] } },
     select: { id: true, username: true },
@@ -75,15 +73,19 @@ async function main() {
   }
 
   console.log(`✅ Seed zakończony: 1 admin + ${PLAYERS.length} graczy.`);
-  console.log(`   Admin: login "${ADMIN.username}" (hasło z ADMIN_PASSWORD w .env)`);
-  console.log(`   Gracze: hasło "${PLAYER_PASSWORD}"`);
+  console.log(`   Admin: login "${ADMIN.username}" (hasło z ADMIN_PASSWORD)`);
+  console.log(`   Gracze: hasło z SEED_PASSWORD`);
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+const isDirectRun = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  seedUsers()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

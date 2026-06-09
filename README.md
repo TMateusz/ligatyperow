@@ -29,7 +29,7 @@ npm install
 ```env
 DATABASE_URL="file:./data/ligatyperow.db"
 JWT_SECRET="twoj-losowy-klucz-min-32-znaki"
-ADMIN_PASSWORD="TwojeHasloAdmina"
+ADMIN_PASSWORD="123"
 SEED_PASSWORD="worldcup2026"
 ```
 
@@ -52,7 +52,7 @@ npm run dev
 
 | Kto | Login | Hasło |
 |-----|-------|-------|
-| Admin | `admin` | z `ADMIN_PASSWORD` |
+| Admin | `admin` | `123` |
 | Znajomi | `jan`, `piotr`… | z `SEED_PASSWORD` |
 
 ## Docker

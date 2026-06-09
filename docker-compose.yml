@@ -9,7 +9,8 @@ services:
       DATABASE_URL: "file:/app/data/ligatyperow.db"
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-atosms2026}
+      SEED_PASSWORD: ${SEED_PASSWORD:-atos}
     volumes:
       - sqlite_data:/app/data
 
@@ -24,8 +25,8 @@ services:
     environment:
       DATABASE_URL: "file:/app/data/ligatyperow.db"
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
-      SEED_PASSWORD: ${SEED_PASSWORD:-worldcup2026}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-atosms2026}
+      SEED_PASSWORD: ${SEED_PASSWORD:-atos}
     volumes:
       - sqlite_data:/app/data
     entrypoint: ["sh", "-c", "npx prisma db push && npx prisma db seed"]
