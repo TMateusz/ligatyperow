@@ -1,6 +1,7 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Clock, Lock, CheckCircle2 } from "lucide-react";
-import { isMatchLocked } from "@shared/scoring";
+import { canBetOnMatch } from "@shared/scoring";
+import { TeamWithFlag } from "./TeamWithFlag";
 
 export type MatchData = {
   id: string;
@@ -34,8 +35,18 @@ function formatKickoff(iso: string) {
 }
 
 export function MatchCard({ match, onSave }: Props) {
-  const locked = isMatchLocked(new Date(match.kickoffTime)) || match.status !== "PENDING";
+  const [now, setNow] = useState(() => new Date());
+  const kickoff = new Date(match.kickoffTime);
+  const locked = !canBetOnMatch(match.status, kickoff, now);
   const finished = match.status === "FINISHED";
+
+  useEffect(() => {
+    if (locked) return;
+    const msToKickoff = kickoff.getTime() - Date.now();
+    const intervalMs = msToKickoff <= 5 * 60 * 1000 ? 1_000 : 30_000;
+    const id = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(id);
+  }, [match.kickoffTime, match.status, locked]);
 
   const [home, setHome] = useState(match.prediction?.predictedHomeScore ?? 0);
   const [away, setAway] = useState(match.prediction?.predictedAwayScore ?? 0);
@@ -44,6 +55,7 @@ export function MatchCard({ match, onSave }: Props) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (locked) return;
     setSaving(true);
     setMessage("");
     try {
@@ -67,15 +79,25 @@ export function MatchCard({ match, onSave }: Props) {
       </div>
 
       <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
-        <div>
-          <p className="text-lg font-bold sm:text-xl">{match.homeTeam}</p>
+        <div className="flex flex-col items-center gap-1">
+          <TeamWithFlag
+            name={match.homeTeam}
+            layout="stack"
+            flagWidth={28}
+            nameClassName="text-lg font-bold sm:text-xl"
+          />
           {finished && (
             <p className="text-3xl font-black text-[var(--gold)]">{match.homeScore}</p>
           )}
         </div>
         <span className="text-white/40">vs</span>
-        <div>
-          <p className="text-lg font-bold sm:text-xl">{match.awayTeam}</p>
+        <div className="flex flex-col items-center gap-1">
+          <TeamWithFlag
+            name={match.awayTeam}
+            layout="stack"
+            flagWidth={28}
+            nameClassName="text-lg font-bold sm:text-xl"
+          />
           {finished && (
             <p className="text-3xl font-black text-[var(--gold)]">{match.awayScore}</p>
           )}

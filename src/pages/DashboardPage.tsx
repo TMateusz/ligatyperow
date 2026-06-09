@@ -1,16 +1,31 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
+import { filterMatchesByTab, getStageTabLabel, STAGE_TABS } from "@shared/match-stages";
+import { LoadingScreen } from "../components/LoadingScreen";
+import { RefreshButton } from "../components/RefreshButton";
 import { MatchCard, type MatchData } from "../components/MatchCard";
 
 export default function DashboardPage() {
   const [matches, setMatches] = useState<MatchData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+
+  const loadMatches = useCallback(async (silent = false) => {
+    if (silent) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const data = await api<MatchData[]>("/matches");
+      setMatches(data);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    api<MatchData[]>("/matches")
-      .then(setMatches)
-      .finally(() => setLoading(false));
-  }, []);
+    void loadMatches();
+  }, [loadMatches]);
 
   async function savePrediction(matchId: string, home: number, away: number) {
     await api("/predictions", {
@@ -38,8 +53,15 @@ export default function DashboardPage() {
     );
   }
 
+  const filtered = useMemo(() => {
+    const list = filterMatchesByTab(matches, activeTab);
+    return [...list].sort(
+      (a, b) => new Date(a.kickoffTime).getTime() - new Date(b.kickoffTime).getTime()
+    );
+  }, [matches, activeTab]);
+
   if (loading) {
-    return <p className="text-white/60">Ładowanie meczów…</p>;
+    return <LoadingScreen label="Ładowanie meczów…" compact />;
   }
 
   if (matches.length === 0) {
@@ -50,38 +72,62 @@ export default function DashboardPage() {
     );
   }
 
-  const upcoming = matches.filter((m) => m.status === "PENDING");
-  const finished = matches.filter((m) => m.status === "FINISHED");
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Mecze</h2>
-        <p className="text-white/60">
-          Typuj wyniki przed rozpoczęciem meczu. Dokładny wynik = 3 pkt, poprawny wynik = 1 pkt.
-        </p>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="wc-page-title">Mecze</h2>
+          <p className="text-white/60">
+            Typuj wyniki przed rozpoczęciem meczu. Dokładny wynik = 3 pkt, poprawny wynik = 1 pkt.
+          </p>
+        </div>
+        <RefreshButton loading={refreshing} onClick={() => loadMatches(true)} />
       </div>
 
-      {upcoming.length > 0 && (
-        <section className="space-y-4">
-          <h3 className="text-lg font-semibold text-[var(--gold)]">Nadchodzące mecze</h3>
-          <div className="grid gap-4">
-            {upcoming.map((match) => (
-              <MatchCard key={match.id} match={match} onSave={savePrediction} />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="card-pitch p-2">
+        <div className="flex flex-wrap gap-1.5">
+          {STAGE_TABS.map((tab) => {
+            const count =
+              tab.id === "all"
+                ? matches.length
+                : filterMatchesByTab(matches, tab.id).length;
+            const active = activeTab === tab.id;
 
-      {finished.length > 0 && (
-        <section className="space-y-4">
-          <h3 className="text-lg font-semibold text-white/70">Zakończone mecze</h3>
-          <div className="grid gap-4">
-            {finished.map((match) => (
-              <MatchCard key={match.id} match={match} onSave={savePrediction} />
-            ))}
-          </div>
-        </section>
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                title={tab.title}
+                onClick={() => setActiveTab(tab.id)}
+                className={`rounded-lg px-2.5 py-1.5 text-sm font-medium transition sm:px-3 sm:py-2 ${
+                  active
+                    ? "bg-[var(--gold)] text-[var(--pitch-dark)]"
+                    : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {tab.label}
+                <span className={`ml-1.5 text-xs ${active ? "text-[var(--pitch-dark)]/70" : "text-white/40"}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="text-lg font-semibold text-[var(--gold)]">{getStageTabLabel(activeTab)}</h3>
+        <p className="text-sm text-white/40">{filtered.length} meczów</p>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="card-pitch p-8 text-center text-white/50">Brak meczów w tej fazie turnieju.</div>
+      ) : (
+        <div className="grid gap-4">
+          {filtered.map((match) => (
+            <MatchCard key={match.id} match={match} onSave={savePrediction} />
+          ))}
+        </div>
       )}
     </div>
   );

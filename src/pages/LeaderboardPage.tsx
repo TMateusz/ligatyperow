@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Medal } from "lucide-react";
 import { api } from "../api/client";
 import { useAuth } from "../contexts/AuthContext";
 import { getShortName, orderUsersForTipsTable } from "@shared/display-names";
 import { abbreviateTeam } from "@shared/team-abbrev";
+import { LoadingScreen } from "../components/LoadingScreen";
+import { RefreshButton } from "../components/RefreshButton";
+import { TeamWithFlag } from "../components/TeamWithFlag";
 
 type LeaderboardUser = {
   id: string;
@@ -100,15 +103,23 @@ function MatchLabel({
     <>
       {/* Mobile — kompaktowo */}
       <div className="sm:hidden leading-tight">
-        <p className="text-[10px] font-bold leading-none">{abbreviateTeam(homeTeam)}</p>
-        <p className="my-0.5 text-[8px] text-white/35">–</p>
-        <p className="text-[10px] font-bold leading-none">{abbreviateTeam(awayTeam)}</p>
-        <p className="mt-1 text-[8px] text-white/40">{shortDate}</p>
+        <div className="flex items-center justify-center gap-1">
+          <TeamWithFlag name={homeTeam} flagWidth={14} showName={false} />
+          <p className="text-[10px] font-bold leading-none">{abbreviateTeam(homeTeam)}</p>
+        </div>
+        <p className="my-0.5 text-center text-[8px] text-white/35">–</p>
+        <div className="flex items-center justify-center gap-1">
+          <TeamWithFlag name={awayTeam} flagWidth={14} showName={false} />
+          <p className="text-[10px] font-bold leading-none">{abbreviateTeam(awayTeam)}</p>
+        </div>
+        <p className="mt-1 text-center text-[8px] text-white/40">{shortDate}</p>
       </div>
       {/* Desktop */}
       <div className="hidden sm:block">
-        <p className="font-medium whitespace-nowrap">
-          {homeTeam} vs {awayTeam}
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium whitespace-nowrap">
+          <TeamWithFlag name={homeTeam} flagWidth={18} />
+          <span className="text-white/40">vs</span>
+          <TeamWithFlag name={awayTeam} flagWidth={18} />
         </p>
         <p className="text-xs text-white/40">
           {stage} · {formatDate(kickoffTime)}
@@ -122,13 +133,26 @@ export default function LeaderboardPage() {
   const { user } = useAuth();
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
-  useEffect(() => {
-    api<LeaderboardData>("/leaderboard")
-      .then(setData)
-      .finally(() => setLoading(false));
+  const loadLeaderboard = useCallback(async (silent = false) => {
+    if (silent) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const result = await api<LeaderboardData>("/leaderboard");
+      setData(result);
+    } catch {
+      if (!silent) setData(null);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadLeaderboard();
+  }, [loadLeaderboard]);
 
   const predictionMap = useMemo(() => {
     const map = new Map<string, Prediction>();
@@ -142,7 +166,7 @@ export default function LeaderboardPage() {
   );
 
   if (loading) {
-    return <p className="text-white/60">Ładowanie rankingu…</p>;
+    return <LoadingScreen label="Ładowanie rankingu…" compact />;
   }
 
   if (!data) {
@@ -153,9 +177,12 @@ export default function LeaderboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold">Ranking</h2>
-        <p className="text-white/60">Klasyfikacja i wszystkie typy graczy</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="wc-page-title">Ranking</h2>
+          <p className="text-white/60">Klasyfikacja i wszystkie typy graczy</p>
+        </div>
+        <RefreshButton loading={refreshing} onClick={() => loadLeaderboard(true)} />
       </div>
 
       {/* Tabela punktów */}
@@ -220,7 +247,7 @@ export default function LeaderboardPage() {
             <table className="w-full min-w-[22rem] text-left text-sm sm:min-w-[640px]">
               <thead className="border-b border-white/10 bg-white/5 text-white/50">
                 <tr>
-                  <th className="sticky left-0 z-10 w-[3.25rem] min-w-[3.25rem] bg-[#0a3d22] px-1 py-2 text-[9px] uppercase sm:w-auto sm:min-w-0 sm:px-3 sm:py-3 sm:text-xs">
+                  <th className="sticky left-0 z-10 w-[3.25rem] min-w-[3.25rem] bg-[#0d111c] px-1 py-2 text-[9px] uppercase sm:w-auto sm:min-w-0 sm:px-3 sm:py-3 sm:text-xs">
                     Mecz
                   </th>
                   {tipUsers.map((u) => (
@@ -242,7 +269,7 @@ export default function LeaderboardPage() {
                   const finished = match.status === "FINISHED";
                   return (
                     <tr key={match.id} className="border-b border-white/5">
-                      <td className="sticky left-0 z-10 w-[3.25rem] min-w-[3.25rem] bg-[#0a3d22]/95 px-1 py-1.5 sm:w-auto sm:min-w-0 sm:px-3 sm:py-3">
+                      <td className="sticky left-0 z-10 w-[3.25rem] min-w-[3.25rem] bg-[#0d111c]/95 px-1 py-1.5 sm:w-auto sm:min-w-0 sm:px-3 sm:py-3">
                         <MatchLabel
                           homeTeam={match.homeTeam}
                           awayTeam={match.awayTeam}
@@ -323,10 +350,12 @@ export default function LeaderboardPage() {
                               className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/5 px-3 py-2 text-sm"
                             >
                               <div>
-                                <span className="font-medium">
-                                  {match.homeTeam} vs {match.awayTeam}
+                                <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+                                  <TeamWithFlag name={match.homeTeam} flagWidth={16} />
+                                  <span className="text-white/40">vs</span>
+                                  <TeamWithFlag name={match.awayTeam} flagWidth={16} />
                                 </span>
-                                <span className="ml-2 text-white/40">{match.stage}</span>
+                                <span className="ml-0 mt-1 block text-white/40">{match.stage}</span>
                               </div>
                               <div className="flex items-center gap-3">
                                 <span className="font-bold">

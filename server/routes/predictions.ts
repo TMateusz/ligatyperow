@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isMatchLocked } from "../../shared/scoring.js";
+import { canBetOnMatch } from "../../shared/scoring.js";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 
@@ -23,7 +23,7 @@ router.post("/", requireAuth, async (req, res) => {
     return res.status(404).json({ error: "Mecz nie istnieje" });
   }
 
-  if (match.status !== "PENDING" || isMatchLocked(match.kickoffTime)) {
+  if (!canBetOnMatch(match.status, match.kickoffTime)) {
     return res.status(403).json({ error: "Typowanie zablokowane — mecz już się rozpoczął" });
   }
 

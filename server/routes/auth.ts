@@ -45,4 +45,34 @@ router.get("/me", requireAuth, async (req, res) => {
   res.json(user);
 });
 
+router.post("/change-password", requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Podaj obecne i nowe hasło" });
+  }
+
+  if (typeof newPassword !== "string" || newPassword.length < 4) {
+    return res.status(400).json({ error: "Nowe hasło musi mieć co najmniej 4 znaki" });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if (!user) {
+    return res.status(404).json({ error: "Użytkownik nie istnieje" });
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) {
+    return res.status(401).json({ error: "Obecne hasło jest nieprawidłowe" });
+  }
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashed },
+  });
+
+  res.json({ ok: true });
+});
+
 export default router;

@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
 import { api } from "../api/client";
 import { isPlaceholderMatch } from "@shared/placeholders";
+import { TeamWithFlag } from "../components/TeamWithFlag";
 
 type AdminMatch = {
   id: string;
@@ -182,8 +183,10 @@ export default function AdminPage() {
                   {match.fixtureNumber && (
                     <span className="text-xs text-white/40">Mecz #{match.fixtureNumber} · </span>
                   )}
-                  <p className="font-medium">
-                    {match.homeTeam} vs {match.awayTeam}
+                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+                    <TeamWithFlag name={match.homeTeam} flagWidth={18} />
+                    <span className="text-white/40">vs</span>
+                    <TeamWithFlag name={match.awayTeam} flagWidth={18} />
                   </p>
                   <p className="text-sm text-white/50">
                     {match.stage} · {new Date(match.kickoffTime).toLocaleString("pl-PL")}

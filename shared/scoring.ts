@@ -36,3 +36,11 @@ export function calculatePoints(input: ScoreInput): number {
 export function isMatchLocked(kickoffTime: Date, now: Date = new Date()): boolean {
   return now >= kickoffTime;
 }
+
+export function canBetOnMatch(
+  status: string,
+  kickoffTime: Date,
+  now: Date = new Date()
+): boolean {
+  return status === "PENDING" && !isMatchLocked(kickoffTime, now);
+}

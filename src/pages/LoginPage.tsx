@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trophy } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { WcBrandMark } from "../components/WcBrandMark";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -26,18 +26,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6 pt-12">
+    <div className="mx-auto flex max-w-md flex-col gap-6 pt-2 sm:gap-8 sm:pt-4">
+      <WcBrandMark size="lg" />
+
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--gold)]/20">
-          <Trophy className="h-8 w-8 text-[var(--gold)]" />
-        </div>
-        <h1 className="text-3xl font-bold">Liga Typerów</h1>
-        <p className="mt-2 text-white/70">Zaloguj się, aby typować wyniki MŚ 2026</p>
+        <h1 className="font-display text-3xl font-bold tracking-wide text-white sm:text-4xl">
+          Liga Typerów
+        </h1>
+        <p className="mt-2 text-white/60">
+          Typuj wyniki Mistrzostw Świata 2026 w gronie znajomych
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="card-pitch flex flex-col gap-4 p-6">
         <div>
-          <label htmlFor="username" className="mb-1 block text-sm font-medium">
+          <label htmlFor="username" className="mb-1 block text-sm font-medium text-white/80">
             Login
           </label>
           <input
@@ -45,13 +48,13 @@ export default function LoginPage() {
             name="username"
             required
             autoComplete="username"
-            className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 outline-none focus:border-[var(--gold)]"
-            placeholder="np. jan"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 outline-none transition focus:border-[var(--wc-gold)] focus:bg-white/10"
+            placeholder="np. olek"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">
+          <label htmlFor="password" className="mb-1 block text-sm font-medium text-white/80">
             Hasło
           </label>
           <input
@@ -60,7 +63,7 @@ export default function LoginPage() {
             type="password"
             required
             autoComplete="current-password"
-            className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 outline-none focus:border-[var(--gold)]"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 outline-none transition focus:border-[var(--wc-gold)] focus:bg-white/10"
           />
         </div>
 
@@ -69,12 +72,12 @@ export default function LoginPage() {
         )}
 
         <button type="submit" disabled={loading} className="btn-primary w-full">
-          {loading ? "Logowanie…" : "Zaloguj się"}
+          {loading ? "Logowanie…" : "Wejdź do ligi"}
         </button>
       </form>
 
-      <p className="text-center text-xs text-white/40">
-        Dostęp tylko dla zaproszonych uczestników ligi.
+      <p className="text-center text-xs text-white/35">
+        104 mecze · 48 reprezentacji · 16 miast gospodarzy
       </p>
     </div>
   );

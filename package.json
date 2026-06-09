@@ -22,6 +22,7 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "flag-icons": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.513.0",
     "react": "^19.1.0",

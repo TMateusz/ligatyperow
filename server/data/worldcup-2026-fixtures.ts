@@ -114,6 +114,8 @@ export const WC2026_FIXTURES: StaticFixture[] = [
   { n: 102, date: "2026-07-15", timeEt: "15:00", home: "Zwycięzca M99", away: "Zwycięzca M100", stage: "Półfinał", venue: "Mercedes-Benz Stadium, Atlanta" },
   { n: 103, date: "2026-07-18", timeEt: "17:00", home: "Przegrany M101", away: "Przegrany M102", stage: "Mecz o 3. miejsce", venue: "Hard Rock Stadium, Miami" },
   { n: 104, date: "2026-07-19", timeEt: "15:00", home: "Zwycięzca M101", away: "Zwycięzca M102", stage: "Finał", venue: "MetLife Stadium, New York" },
+  { n: 105, date: "2026-06-19", timeEt: "15:00", home: "Zwycięzca M101", away: "Zwycięzca M102", stage: "Finał", venue: "MetLife Stadium, New York" },
+
 ];
 
 /** Konwersja czasu EDT (UTC-4) na UTC. */
