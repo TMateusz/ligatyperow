@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import { filterMatchesByTab, getStageTabLabel, STAGE_TABS } from "@shared/match-stages";
+import { sortDashboardMatches } from "@shared/scoring";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { RefreshButton } from "../components/RefreshButton";
 import { MatchCard, type MatchData } from "../components/MatchCard";
@@ -10,6 +11,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    if (activeTab === "finished") return;
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, [activeTab]);
 
   const loadMatches = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
@@ -55,10 +63,11 @@ export default function DashboardPage() {
 
   const filtered = useMemo(() => {
     const list = filterMatchesByTab(matches, activeTab);
-    return [...list].sort(
-      (a, b) => new Date(a.kickoffTime).getTime() - new Date(b.kickoffTime).getTime()
-    );
-  }, [matches, activeTab]);
+    return sortDashboardMatches(list, {
+      finishedTab: activeTab === "finished",
+      now,
+    });
+  }, [matches, activeTab, now]);
 
   if (loading) {
     return <LoadingScreen label="Ładowanie meczów…" compact />;
@@ -87,10 +96,7 @@ export default function DashboardPage() {
       <div className="card-pitch p-2">
         <div className="flex flex-wrap gap-1.5">
           {STAGE_TABS.map((tab) => {
-            const count =
-              tab.id === "all"
-                ? matches.length
-                : filterMatchesByTab(matches, tab.id).length;
+            const count = filterMatchesByTab(matches, tab.id).length;
             const active = activeTab === tab.id;
 
             return (
@@ -121,7 +127,9 @@ export default function DashboardPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="card-pitch p-8 text-center text-white/50">Brak meczów w tej fazie turnieju.</div>
+        <div className="card-pitch p-8 text-center text-white/50">
+          {activeTab === "finished" ? "Brak zakończonych meczów." : "Brak meczów w tej fazie turnieju."}
+        </div>
       ) : (
         <div className="grid gap-4">
           {filtered.map((match) => (

@@ -44,3 +44,32 @@ export function canBetOnMatch(
 ): boolean {
   return status === "PENDING" && !isMatchLocked(kickoffTime, now);
 }
+
+export function getDashboardMatchSortRank(
+  match: { status: string; kickoffTime: Date | string },
+  now: Date = new Date()
+): number {
+  if (match.status === "FINISHED") return 2;
+  if (canBetOnMatch(match.status, new Date(match.kickoffTime), now)) return 0;
+  return 1;
+}
+
+export function sortDashboardMatches<T extends { status: string; kickoffTime: Date | string }>(
+  matches: T[],
+  options: { finishedTab?: boolean; now?: Date } = {}
+): T[] {
+  const { finishedTab = false, now = new Date() } = options;
+
+  if (finishedTab) {
+    return [...matches].sort(
+      (a, b) => new Date(b.kickoffTime).getTime() - new Date(a.kickoffTime).getTime()
+    );
+  }
+
+  return [...matches].sort((a, b) => {
+    const rankA = getDashboardMatchSortRank(a, now);
+    const rankB = getDashboardMatchSortRank(b, now);
+    if (rankA !== rankB) return rankA - rankB;
+    return new Date(a.kickoffTime).getTime() - new Date(b.kickoffTime).getTime();
+  });
+}

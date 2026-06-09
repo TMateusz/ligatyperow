@@ -5,8 +5,12 @@ export type StageTab = {
   matchStages?: string[];
 };
 
+export function isFinishedMatch(match: { status: string }): boolean {
+  return match.status === "FINISHED";
+}
+
 export const STAGE_TABS: StageTab[] = [
-  { id: "all", label: "Wszystkie", title: "Pełna lista meczów" },
+  { id: "all", label: "Wszystkie", title: "Nadchodzące mecze" },
   ...(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"] as const).map((letter) => ({
     id: `group-${letter}`,
     label: letter,
@@ -19,16 +23,25 @@ export const STAGE_TABS: StageTab[] = [
   { id: "r2", label: "1/2", title: "Półfinał", matchStages: ["Półfinał"] },
   { id: "third", label: "3.", title: "Mecz o 3. miejsce", matchStages: ["Mecz o 3. miejsce"] },
   { id: "final", label: "Finał", title: "Finał", matchStages: ["Finał"] },
+  { id: "finished", label: "Zakończone", title: "Zakończone mecze" },
 ];
 
-export function filterMatchesByTab<T extends { stage: string | null }>(
+export function filterMatchesByTab<T extends { stage: string | null; status: string }>(
   matches: T[],
   tabId: string
 ): T[] {
-  if (tabId === "all") return matches;
+  if (tabId === "finished") {
+    return matches.filter(isFinishedMatch);
+  }
+
+  if (tabId === "all") {
+    return matches.filter((m) => !isFinishedMatch(m));
+  }
 
   const tab = STAGE_TABS.find((t) => t.id === tabId);
-  if (!tab?.matchStages) return matches;
+  if (!tab?.matchStages) {
+    return matches.filter((m) => !isFinishedMatch(m));
+  }
 
   return matches.filter((m) => tab.matchStages!.includes(m.stage ?? ""));
 }
